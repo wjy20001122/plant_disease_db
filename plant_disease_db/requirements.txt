@@ -1,0 +1,7 @@
+
+django==4.2.7
+mysqlclient==2.2.0
+pillow==10.1.0
+django-crispy-forms==2.0
+crispy-bootstrap5==0.7
+django-cleanup==8.0.0

@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}个人资料 - 植物病害数据库管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-id-card me-2"></i>个人资料</h1>
+    <div>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> 返回仪表盘
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-user me-1"></i> 用户信息
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-circle fa-6x text-secondary"></i>
+                </div>
+                <h4>{{ user.username }}</h4>
+                <p class="text-muted">
+                    <span class="badge bg-{{ user.role|yesno:'danger,primary' }}">{{ user.get_role_display }}</span>
+                </p>
+                <p class="mb-1">
+                    <i class="fas fa-envelope me-1"></i> {{ user.email|default:"未设置邮箱" }}
+                </p>
+                <p class="mb-1">
+                    <i class="fas fa-phone me-1"></i> {{ user.phone|default:"未设置电话" }}
+                </p>
+                <p class="mb-0">
+                    <i class="fas fa-calendar me-1"></i> 注册时间: {{ user.date_joined|date:"Y-m-d" }}
+                </p>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-chart-pie me-1"></i> 数据统计
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        图片数据
+                        <span class="badge bg-primary rounded-pill">{{ user.imagedata_set.count }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        表格数据
+                        <span class="badge bg-primary rounded-pill">{{ user.tabledata_set.count }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ZIP文件数据
+                        <span class="badge bg-primary rounded-pill">{{ user.zipdata_set.count }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit me-1"></i> 编辑个人资料
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">用户名 <span class="text-danger">*</span></label>
+                        <input type="text" name="username" id="id_username" class="form-control" value="{{ user.username }}" required>
+                        <div class="invalid-feedback">请输入用户名</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">电子邮箱</label>
+                        <input type="email" name="email" id="id_email" class="form-control" value="{{ user.email }}">
+                        <div class="invalid-feedback">请输入有效的电子邮箱地址</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_phone" class="form-label">联系电话</label>
+                        <input type="tel" name="phone" id="id_phone" class="form-control" value="{{ user.phone }}">
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> 保存更改
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-key me-1"></i> 修改密码
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'password_change' %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_old_password" class="form-label">当前密码 <span class="text-danger">*</span></label>
+                        <input type="password" name="old_password" id="id_old_password" class="form-control" required>
+                        <div class="invalid-feedback">请输入当前密码</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_new_password1" class="form-label">新密码 <span class="text-danger">*</span></label>
+                        <input type="password" name="new_password1" id="id_new_password1" class="form-control" required>
+                        <div class="invalid-feedback">请输入新密码</div>
+                        <small class="form-text text-muted">
+                            密码必须包含至少8个字符，不能与个人信息相似，且不能是常见密码
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_new_password2" class="form-label">确认新密码 <span class="text-danger">*</span></label>
+                        <input type="password" name="new_password2" id="id_new_password2" class="form-control" required>
+                        <div class="invalid-feedback">请再次输入新密码</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-key me-1"></i> 修改密码
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-history me-1"></i> 最近上传的数据
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for data in recent_data %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">
+                                    {% if data.type == 'image' %}
+                                    <i class="fas fa-image text-primary me-1"></i>
+                                    {% elif data.type == 'table' %}
+                                    <i class="fas fa-table text-success me-1"></i>
+                                    {% else %}
+                                    <i class="fas fa-file-archive text-warning me-1"></i>
+                                    {% endif %}
+                                    {{ data.name }}
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i> {{ data.created_at|date:"Y-m-d H:i" }}
+                                </small>
+                            </div>
+                            <a href="{{ data.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                {% if data.type == 'image' %}
+                                <i class="fas fa-eye me-1"></i> 查看
+                                {% else %}
+                                <i class="fas fa-download me-1"></i> 下载
+                                {% endif %}
+                            </a>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-center py-4">
+                        <i class="fas fa-info-circle me-1"></i> 暂无上传数据
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 表单验证
+    (function() {
+        'use strict';
+        
+        var forms = document.querySelectorAll('.needs-validation');
+        
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+    
+    // 密码确认验证
+    document.getElementById('id_new_password2').addEventListener('input', function() {
+        const password1 = document.getElementById('id_new_password1').value;
+        const password2 = this.value;
+        
+        if (password1 !== password2) {
+            this.setCustomValidity('两次输入的密码不匹配');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+</script>
+{% endblock %}
+

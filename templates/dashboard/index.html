@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}仪表盘 - 植物病害数据库管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-chart-bar me-2"></i>仪表盘</h1>
+    <div>
+        <a href="{% url 'search_data' %}" class="btn btn-outline-primary">
+            <i class="fas fa-search me-1"></i> 高级搜索
+        </a>
+    </div>
+</div>
+
+<!-- 搜索栏 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form action="{% url 'search_data' %}" method="get" class="row g-3" id="searchForm">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="搜索数据名称、描述..." value="{{ request.GET.q }}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select name="crop_type" class="form-select">
+                    <option value="">所有作物</option>
+                    {% for crop in crop_types %}
+                    <option value="{{ crop.name }}" {% if request.GET.crop_type == crop.name %}selected{% endif %}>{{ crop.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="uploader" class="form-select">
+                    <option value="">所有上传者</option>
+                    {% for user in users %}
+                    <option value="{{ user.username }}" {% if request.GET.uploader == user.username %}selected{% endif %}>{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i> 搜索
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 数据统计 -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="icon">
+                    <i class="fas fa-image"></i>
+                </div>
+                <div class="count">{{ images_count }}</div>
+                <div class="title">图片数据</div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{% url 'search_data' %}?type=image" class="text-decoration-none">查看全部 <i class="fas fa-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="icon">
+                    <i class="fas fa-table"></i>
+                </div>
+                <div class="count">{{ tables_count }}</div>
+                <div class="title">表格数据</div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{% url 'search_data' %}?type=table" class="text-decoration-none">查看全部 <i class="fas fa-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="icon">
+                    <i class="fas fa-file-archive"></i>
+                </div>
+                <div class="count">{{ zips_count }}</div>
+                <div class="title">ZIP文件数据</div>
+            </div>
+            <div class="card-footer text-center">
+                <a href="{% url 'search_data' %}?type=zip" class="text-decoration-none">查看全部 <i class="fas fa-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 数据统计图表 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-chart-bar me-1"></i> 数据统计图表
+    </div>
+    <div class="card-body">
+        <canvas id="statsChart" data-stats='{"images_count": {{ images_count }}, "tables_count": {{ tables_count }}, "zips_count": {{ zips_count }}}'></canvas>
+    </div>
+</div>
+
+<!-- 最近上传的数据 -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-image me-1"></i> 最近上传的图片</span>
+                <a href="{% url 'search_data' %}?type=image" class="btn btn-sm btn-outline-primary">查看全部</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for image in recent_images %}
+                <li class="list-group-item">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ image.image.url }}" class="img-thumbnail me-3 gallery-image" alt="{{ image.name }}" width="60" height="60" data-full-src="{{ image.image.url }}">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ image.name }}</h6>
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i> {{ image.uploader.username }} 
+                                <i class="fas fa-clock ms-2 me-1"></i> {{ image.created_at|date:"Y-m-d H:i" }}
+                            </small>
+                        </div>
+                        <a href="{{ image.image.url }}" class="btn btn-sm btn-outline-primary" target="_blank" data-bs-toggle="tooltip" title="查看">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center py-4">
+                    <i class="fas fa-info-circle me-1"></i> 暂无数据
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-table me-1"></i> 最近上传的表格</span>
+                <a href="{% url 'search_data' %}?type=table" class="btn btn-sm btn-outline-primary">查看全部</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for table in recent_tables %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">{{ table.name }}</h6>
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i> {{ table.uploader.username }} 
+                                <i class="fas fa-clock ms-2 me-1"></i> {{ table.created_at|date:"Y-m-d H:i" }}
+                            </small>
+                        </div>
+                        <div>
+                            <a href="{{ table.file.url }}" class="btn btn-sm btn-outline-primary" download data-bs-toggle="tooltip" title="下载">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center py-4">
+                    <i class="fas fa-info-circle me-1"></i> 暂无数据
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-file-archive me-1"></i> 最近上传的ZIP文件</span>
+                <a href="{% url 'search_data' %}?type=zip" class="btn btn-sm btn-outline-primary">查看全部</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for zip in recent_zips %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">{{ zip.name }}</h6>
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i> {{ zip.uploader.username }} 
+                                <i class="fas fa-clock ms-2 me-1"></i> {{ zip.created_at|date:"Y-m-d H:i" }}
+                            </small>
+                        </div>
+                        <div>
+                            <a href="{{ zip.file.url }}" class="btn btn-sm btn-outline-primary" download data-bs-toggle="tooltip" title="下载">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center py-4">
+                    <i class="fas fa-info-circle me-1"></i> 暂无数据
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 初始化图表
+    document.addEventListener('DOMContentLoaded', function() {
+        const statsChart = document.getElementById('statsChart');
+        if (statsChart) {
+            const ctx = statsChart.getContext('2d');
+            const data = JSON.parse(statsChart.getAttribute('data-stats'));
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['图片', '表格', 'ZIP文件'],
+                    datasets: [{
+                        label: '数据统计',
+                        data: [data.images_count, data.tables_count, data.zips_count],
+                        backgroundColor: [
+                            'rgba(44, 119, 68, 0.6)',
+                            'rgba(33, 150, 243, 0.6)',
+                            'rgba(255, 193, 7, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(44, 119, 68, 1)',
+                            'rgba(33, 150, 243, 1)',
+                            'rgba(255, 193, 7, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+

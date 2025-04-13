@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}搜索结果 - 植物病害数据库管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-search me-2"></i>搜索结果</h1>
+    <div>
+        <button id="clearSearch" class="btn btn-outline-secondary">
+            <i class="fas fa-eraser me-1"></i> 清除筛选
+        </button>
+    </div>
+</div>
+
+<!-- 搜索栏 -->
+<div class="card mb-4 search-bar">
+    <div class="card-body">
+        <form action="{% url 'search_data' %}" method="get" class="row g-3" id="searchForm">
+            <div class="col-md-4">
+                <label for="q" class="form-label">关键词</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="q" name="q" class="form-control" placeholder="搜索数据名称、描述..." value="{{ query }}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label for="crop_type" class="form-label">作物类型</label>
+                <select id="crop_type" name="crop_type" class="form-select">
+                    <option value="">所有作物</option>
+                    {% for crop in crop_types %}
+                    <option value="{{ crop.name }}" {% if crop_type == crop.name %}selected{% endif %}>{{ crop.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="region" class="form-label">地区</label>
+                <select id="region" name="region" class="form-select">
+                    <option value="">所有地区</option>
+                    {% for region in regions %}
+                    <option value="{{ region.name }}" {% if request.GET.region == region.name %}selected{% endif %}>{{ region.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="uploader" class="form-label">上传者</label>
+                <select id="uploader" name="uploader" class="form-select">
+                    <option value="">所有上传者</option>
+                    {% for user in users %}
+                    <option value="{{ user.username }}" {% if uploader == user.username %}selected{% endif %}>{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="type" class="form-label">数据类型</label>
+                <select id="type" name="type" class="form-select">
+                    <option value="">所有类型</option>
+                    <option value="image" {% if request.GET.type == 'image' %}selected{% endif %}>图片</option>
+                    <option value="table" {% if request.GET.type == 'table' %}selected{% endif %}>表格</option>
+                    <option value="zip" {% if request.GET.type == 'zip' %}selected{% endif %}>ZIP文件</option>
+                </select>
+            </div>
+            <div class="col-12 mt-4">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="reset" class="btn btn-outline-secondary">
+                        <i class="fas fa-undo me-1"></i> 重置
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-1"></i> 搜索
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 搜索结果统计 -->
+<div class="alert alert-info mb-4">
+    <i class="fas fa-info-circle me-2"></i> 
+    共找到 <strong>{{ images|length|add:tables|length|add:zips|length }}</strong> 条结果
+    {% if query %} 包含 "<strong>{{ query }}</strong>"{% endif %}
+    {% if crop_type %} 作物类型为 "<strong>{{ crop_type }}</strong>"{% endif %}
+    {% if uploader %} 上传者为 "<strong>{{ uploader }}</strong>"{% endif %}
+</div>
+
+<!-- 搜索结果 -->
+<ul class="nav nav-tabs mb-4" id="resultTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if not request.GET.type or request.GET.type == 'image' %}active{% endif %}" id="images-tab" data-bs-toggle="tab" data-bs-target="#images" type="button" role="tab">
+            <i class="fas fa-image me-1"></i> 图片 ({{ images|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if request.GET.type == 'table' %}active{% endif %}" id="tables-tab" data-bs-toggle="tab" data-bs-target="#tables" type="button" role="tab">
+            <i class="fas fa-table me-1"></i> 表格 ({{ tables|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if request.GET.type == 'zip' %}active{% endif %}" id="zips-tab" data-bs-toggle="tab" data-bs-target="#zips" type="button" role="tab">
+            <i class="fas fa-file-archive me-1"></i> ZIP文件 ({{ zips|length }})
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="resultTabsContent">
+    <!-- 图片结果 -->
+    <div class="tab-pane fade {% if not request.GET.type or request.GET.type == 'image' %}show active{% endif %}" id="images" role="tabpanel">
+        {% if images %}
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            {% for image in images %}
+            <div class="col">
+                <div class="card h-100">
+                    <img src="{{ image.image.url }}" class="card-img-top gallery-image" alt="{{ image.name }}" data-full-src="{{ image.image.url }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ image.name }}</h5>
+                        <p class="card-text">{{ image.description|truncatechars:100 }}</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="fas fa-seedling me-1"></i> 作物类型: {{ image.crop_type.name }}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-map-marker-alt me-1"></i> 地区: {{ image.region.name }}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-user me-1"></i> 上传者: {{ image.uploader.username }}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-clock me-1"></i> 上传时间: {{ image.created_at|date:"Y-m-d H:i" }}
+                        </li>
+                    </ul>
+                    <div class="card-footer d-flex justify-content-between">
+                        <a href="{{ image.image.url }}" class="btn btn-primary" target="_blank">
+                            <i class="fas fa-eye me-1"></i> 查看
+                        </a>
+                        {% if user.role == 'admin' or user == image.uploader %}
+                        <a href="{% url 'delete_data' 'image' image.id %}" class="btn btn-danger delete-confirm">
+                            <i class="fas fa-trash-alt me-1"></i> 删除
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center py-5">
+            <i class="fas fa-info-circle fa-3x mb-3"></i>
+            <h4>没有找到符合条件的图片数据</h4>
+            <p class="mb-0">请尝试调整搜索条件或上传新的图片数据</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 表格结果 -->
+    <div class="tab-pane fade {% if request.GET.type == 'table' %}show active{% endif %}" id="tables" role="tabpanel">
+        {% if tables %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>名称</th>
+                        <th>作物类型</th>
+                        <th>地区</th>
+                        <th>数据来源</th>
+                        <th>上传者</th>
+                        <th>上传时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for table in tables %}
+                    <tr>
+                        <td>
+                            <strong>{{ table.name }}</strong>
+                            {% if table.description %}
+                            <span class="d-block small text-muted">{{ table.description|truncatechars:50 }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ table.crop_type.name }}</td>
+                        <td>{{ table.region.name }}</td>
+                        <td>{{ table.source|default:"未知" }}</td>
+                        <td>{{ table.uploader.username }}</td>
+                        <td>{{ table.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ table.file.url }}" class="btn btn-sm btn-primary" download data-bs-toggle="tooltip" title="下载">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                {% if user.role == 'admin' or user == table.uploader %}
+                                <a href="{% url 'delete_data' 'table' table.id %}" class="btn btn-sm btn-danger delete-confirm" data-bs-toggle="tooltip" title="删除">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center py-5">
+            <i class="fas fa-info-circle fa-3x mb-3"></i>
+            <h4>没有找到符合条件的表格数据</h4>
+            <p class="mb-0">请尝试调整搜索条件或上传新的表格数据</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- ZIP文件结果 -->
+    <div class="tab-pane fade {% if request.GET.type == 'zip' %}show active{% endif %}" id="zips" role="tabpanel">
+        {% if zips %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>名称</th>
+                        <th>作物类型</th>
+                        <th>地区</th>
+                        <th>描述</th>
+                        <th>上传者</th>
+                        <th>上传时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for zip in zips %}
+                    <tr>
+                        <td>
+                            <strong>{{ zip.name }}</strong>
+                        </td>
+                        <td>{{ zip.crop_type.name }}</td>
+                        <td>{{ zip.region.name }}</td>
+                        <td>{{ zip.description|truncatechars:50|default:"无描述" }}</td>
+                        <td>{{ zip.uploader.username }}</td>
+                        <td>{{ zip.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ zip.file.url }}" class="btn btn-sm btn-primary" download data-bs-toggle="tooltip" title="下载">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                {% if user.role == 'admin' or user == zip.uploader %}
+                                <a href="{% url 'delete_data' 'zip' zip.id %}" class="btn btn-sm btn-danger delete-confirm" data-bs-toggle="tooltip" title="删除">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center py-5">
+            <i class="fas fa-info-circle fa-3x mb-3"></i>
+            <h4>没有找到符合条件的ZIP文件数据</h4>
+            <p class="mb-0">请尝试调整搜索条件或上传新的ZIP文件数据</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

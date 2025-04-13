@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}上传表格 - 植物病害数据库管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-table me-2"></i>上传表格</h1>
+    <div>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> 返回仪表盘
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-upload me-1"></i> 上传表格数据
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_name" class="form-label">名称 <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="id_name" class="form-control" required>
+                            <div class="invalid-feedback">请输入名称</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_crop_type" class="form-label">作物类型 <span class="text-danger">*</span></label>
+                            <select name="crop_type" id="id_crop_type" class="form-select" required>
+                                <option value="">请选择作物类型</option>
+                                {% for crop in form.fields.crop_type.queryset %}
+                                <option value="{{ crop.id }}">{{ crop.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">请选择作物类型</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_region" class="form-label">地区 <span class="text-danger">*</span></label>
+                            <select name="region" id="id_region" class="form-select" required>
+                                <option value="">请选择地区</option>
+                                {% for region in form.fields.region.queryset %}
+                                <option value="{{ region.id }}">{{ region.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">请选择地区</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_source" class="form-label">数据来源</label>
+                            <input type="text" name="source" id="id_source" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_file" class="form-label">表格文件 <span class="text-danger">*</span></label>
+                        <input type="file" name="file" id="id_file" class="form-control custom-file-input" accept=".xlsx,.xls,.csv" required>
+                        <div class="invalid-feedback">请选择表格文件</div>
+                        <small class="form-text text-muted">支持的格式：Excel (XLSX, XLS), CSV</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">描述</label>
+                        <textarea name="description" id="id_description" class="form-control" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-1"></i> 重置
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-1"></i> 上传
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i> 文件信息
+            </div>
+            <div class="card-body text-center">
+                <i class="fas fa-file-excel fa-5x text-success mb-3"></i>
+                <p class="text-muted" id="file-info">未选择文件</p>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-question-circle me-1"></i> 上传说明
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>请上传与植物病害相关的表格数据</li>
+                    <li>表格大小不应超过20MB</li>
+                    <li>建议使用Excel或CSV格式</li>
+                    <li>请确保表格数据格式规范，便于后续分析</li>
+                    <li>数据来源字段可填写数据的采集方式、实验条件等</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 表单验证
+    (function() {
+        'use strict';
+        
+        var forms = document.querySelectorAll('.needs-validation');
+        
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+    
+    // 文件信息显示
+    document.getElementById('id_file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const fileInfo = document.getElementById('file-info');
+        
+        if (file) {
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            fileInfo.innerHTML = `
+                <strong>${file.name}</strong><br>
+                <span class="text-muted">大小: ${fileSize} MB</span><br>
+                <span class="text-muted">类型: ${file.type || '未知'}</span>
+            `;
+        } else {
+            fileInfo.textContent = '未选择文件';
+        }
+    });
+</script>
+{% endblock %}
+

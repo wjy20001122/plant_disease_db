@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}上传图片 - 植物病害数据库管理系统{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-image me-2"></i>上传图片</h1>
+    <div>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> 返回仪表盘
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-upload me-1"></i> 上传图片数据
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_name" class="form-label">名称 <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="id_name" class="form-control" required>
+                            <div class="invalid-feedback">请输入名称</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_crop_type" class="form-label">作物类型 <span class="text-danger">*</span></label>
+                            <select name="crop_type" id="id_crop_type" class="form-select" required>
+                                <option value="">请选择作物类型</option>
+                                {% for crop in form.fields.crop_type.queryset %}
+                                <option value="{{ crop.id }}">{{ crop.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">请选择作物类型</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_region" class="form-label">地区 <span class="text-danger">*</span></label>
+                            <select name="region" id="id_region" class="form-select" required>
+                                <option value="">请选择地区</option>
+                                {% for region in form.fields.region.queryset %}
+                                <option value="{{ region.id }}">{{ region.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">请选择地区</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_image" class="form-label">图片文件 <span class="text-danger">*</span></label>
+                            <input type="file" name="image" id="id_image" class="form-control custom-file-input" accept="image/*" required>
+                            <div class="invalid-feedback">请选择图片文件</div>
+                            <small class="form-text text-muted">支持的格式：JPG, PNG, GIF等</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">描述</label>
+                        <textarea name="description" id="id_description" class="form-control" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo me-1"></i> 重置
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-1"></i> 上传
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-1"></i> 图片预览
+            </div>
+            <div class="card-body text-center">
+                <img id="image-preview" src="/static/images/image-placeholder.png" alt="图片预览" class="img-fluid mb-3" style="max-height: 200px; display: none;">
+                <p class="text-muted" id="preview-placeholder">选择图片后将显示预览</p>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-question-circle me-1"></i> 上传说明
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>请上传清晰的植物病害图片</li>
+                    <li>图片大小不应超过10MB</li>
+                    <li>建议使用JPG或PNG格式</li>
+                    <li>请填写准确的作物类型和地区信息</li>
+                    <li>描述中可以包含病害的详细信息、拍摄条件等</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 表单验证
+    (function() {
+        'use strict';
+        
+        var forms = document.querySelectorAll('.needs-validation');
+        
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+    
+    // 图片预览
+    document.getElementById('id_image').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('image-preview');
+        const placeholder = document.getElementById('preview-placeholder');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+        } else {
+            preview.style.display = 'none';
+            placeholder.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}
+
